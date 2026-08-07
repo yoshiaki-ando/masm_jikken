@@ -1,22 +1,17 @@
-    .const
-    CHK_CF dd 1
-    SHIFT_CF db 0
-    
-    CHK_PF dd 4
-    SHIFT_PF db 2
+    CHK_CF   EQU 1
+    SHIFT_CF EQU 0
+    CHK_PF   EQU 4
+    SHIFT_PF EQU 2
+    CHK_ZF   EQU 64
+    SHIFT_ZF EQU 6
+    CHK_SF   EQU 128
+    SHIFT_SF EQU 7
+    CHK_OF   EQU 2048
+    SHIFT_OF EQU 11
 
-    CHK_ZF dd 64
-    SHIFT_ZF db 6
-
-    CHK_SF dd 128
-    SHIFT_SF db 7
-
-    CHK_OF dd 2048
-    SHIFT_OF db 11
-
-    MASK16 dd 0000FFFFh
-    MASK8  dd 000000FFh
-    MASK8h dd 0000FF00h
+    MASK16 EQU 0000FFFFh
+    MASK8  EQU 000000FFh
+    MASK8h EQU 0000FF00h
 
     .data
     format_flag db "CF = %d , PF = %d , ZF = %d , SF = %d , OF = %d", 13, 10, 0
@@ -43,6 +38,8 @@
     carry_flag dd ?
     parity_flag dd ?
     overflow_flag dd ?
+    esp_save dd ?
+    sp_save dd ?
 
     register_eax    dd  ?
     register_ebx    dd  ?
@@ -50,7 +47,6 @@
     register_edx    dd  ?
     register_esi    dd  ?
     register_edi    dd  ?
-    register_esp    dd  ?
     register_ebp    dd  ?
 
     register_ax    dd  ?
@@ -59,7 +55,6 @@
     register_dx    dd  ?
     register_si    dd  ?
     register_di    dd  ?
-    register_sp    dd  ?
     register_bp    dd  ?
 
     register_al    dd  ?
@@ -79,7 +74,6 @@ save_register MACRO
     mov register_edx, edx
     mov register_esi, esi
     mov register_edi, edi
-    mov register_esp, esp
     mov register_ebp, ebp
 ENDM
 
@@ -90,7 +84,6 @@ save_register16 MACRO
     mov register_dx, edx
     mov register_si, esi
     mov register_di, edi
-    mov register_sp, esp
     mov register_bp, ebp
 
     mov eax, register_ax
@@ -116,10 +109,6 @@ save_register16 MACRO
     mov eax, register_di
     and eax, MASK16
     mov register_di, eax
-
-    mov eax, register_sp
-    and eax, MASK16
-    mov register_sp, eax
 
     mov eax, register_bp
     and eax, MASK16
@@ -288,37 +277,43 @@ ENDM
 
 
 dump_register16 MACRO
+    mov sp_save, esp
     pushfd
+    and DWORD PTR sp_save, MASK16; 下位16ビット切り出し
     pushad
     save_register16
-    invoke crt_printf, OFFSET format_register16, register_ax, register_bx, register_cx, register_dx, register_si, register_di, register_sp, register_bp
+    invoke crt_printf, OFFSET format_register16, register_ax, register_bx, register_cx, register_dx, register_si, register_di, sp_save, register_bp
     popad
     popfd
 ENDM
 
 dump_register16h MACRO
+    mov sp_save, esp
     pushfd
+    and DWORD PTR sp_save, MASK16; 下位16ビット切り出し
     pushad
     save_register16
-    invoke crt_printf, OFFSET format_register16h, register_ax, register_bx, register_cx, register_dx, register_si, register_di, register_sp, register_bp
+    invoke crt_printf, OFFSET format_register16h, register_ax, register_bx, register_cx, register_dx, register_si, register_di, sp_save, register_bp
     popad
     popfd
 ENDM
 
 dump_register MACRO
+    mov esp_save, esp
     pushfd
     save_register
     pushad
-    invoke crt_printf, OFFSET format_register, register_eax, register_ebx, register_ecx, register_edx, register_esi, register_edi, register_esp, register_ebp
+    invoke crt_printf, OFFSET format_register, register_eax, register_ebx, register_ecx, register_edx, register_esi, register_edi, esp_save, register_ebp
     popad
     popfd
 ENDM
 
 dump_registerh MACRO
+    mov esp_save, esp
     pushfd
     save_register
     pushad
-    invoke crt_printf, OFFSET format_registerh, register_eax, register_ebx, register_ecx, register_edx, register_esi, register_edi, register_esp, register_ebp
+    invoke crt_printf, OFFSET format_registerh, register_eax, register_ebx, register_ecx, register_edx, register_esi, register_edi, esp_save, register_ebp
     popad
     popfd
 ENDM
