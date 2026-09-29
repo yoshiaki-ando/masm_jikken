@@ -10,7 +10,7 @@ var3    dd  123456789
 fmt     db  'result = %d', 13, 10, 0
 
         .const
-C1      equ 1000
+C1      dw 1000
 
         .code
 start:
